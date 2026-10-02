@@ -1,5 +1,7 @@
 # Sistema de Agendamento
 
+[![CI](https://github.com/EdivanAzevedo/sistem-agendamento/actions/workflows/ci.yml/badge.svg)](https://github.com/EdivanAzevedo/sistem-agendamento/actions/workflows/ci.yml)
+
 Multi-tenant scheduling SaaS for service businesses (salons, barbershops, clinics, studios).
 Each business manages its team, services and a public page where customers book appointments.
 
@@ -58,3 +60,19 @@ npm run lint
 npm run type-check
 npm run test
 ```
+
+## Continuous integration
+
+Every push to `main` and every pull request runs:
+
+1. **API** — Pint, Larastan (max level), Pest against MySQL and Redis with a 90% coverage minimum,
+   `composer audit`.
+2. **Web** — Prettier, oxlint + ESLint, `vue-tsc`, Vitest, `npm audit`, production build.
+3. **Images** — builds the `api` (PHP-FPM) and `edge` (Caddy + SPA) production images from
+   [`infra/docker/Dockerfile`](infra/docker/Dockerfile) and scans them with Trivy. Fixable HIGH or
+   CRITICAL vulnerabilities fail the build; time-boxed exceptions live in
+   [`.trivyignore.yaml`](.trivyignore.yaml), each with a reason and an expiry date. On `main`, the
+   images are published to GitHub Container Registry.
+
+All third-party actions are pinned to commit SHAs, and Dependabot keeps actions, base images and
+dependencies up to date.

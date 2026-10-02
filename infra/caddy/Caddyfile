@@ -1,0 +1,33 @@
+# Production edge. Security headers are added together with the CSP.
+{
+	admin off
+}
+
+{$SITE_ADDRESS::8080} {
+	encode zstd gzip
+
+	# Readiness exposes dependency status: answer only internal callers (deploy, monitoring).
+	@external_ready {
+		path /ready
+		not remote_ip private_ranges
+	}
+	handle @external_ready {
+		respond 404
+	}
+
+	# Backend: API, Sanctum CSRF cookie, API docs and health checks.
+	@laravel path /api/* /sanctum/* /docs/* /up /ready
+	handle @laravel {
+		rewrite * /index.php
+		php_fastcgi {$API_UPSTREAM:api:9000} {
+			root /var/www/api/public
+		}
+	}
+
+	# Everything else is the SPA; unknown paths fall back to index.html (client-side routing).
+	handle {
+		root * /srv/web
+		try_files {path} /index.html
+		file_server
+	}
+}

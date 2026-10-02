@@ -1,0 +1,16 @@
+# Build context allowlist: images only need the application sources and infra files.
+*
+!api
+!web
+!infra
+
+api/.env
+api/.phpunit.cache
+api/bootstrap/cache/*.php
+api/storage
+api/tests
+api/vendor
+web/.eslintcache
+web/dist
+web/node_modules
+**/.DS_Store
