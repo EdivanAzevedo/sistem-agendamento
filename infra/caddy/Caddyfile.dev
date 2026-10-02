@@ -1,0 +1,23 @@
+{
+	admin off
+	auto_https off
+}
+
+:8080 {
+	encode zstd gzip
+
+	# Backend: API, Sanctum CSRF cookie, API docs and health checks.
+	@laravel path /api/* /sanctum/* /docs/* /up /ready
+	handle @laravel {
+		root * /var/www/api/public
+		rewrite * /index.php
+		php_fastcgi api:9000 {
+			root /var/www/api/public
+		}
+	}
+
+	# Everything else is the SPA, served by the Vite dev server (with HMR).
+	handle {
+		reverse_proxy web:5173
+	}
+}
