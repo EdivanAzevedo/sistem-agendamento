@@ -16,7 +16,8 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    // Never `log` by default: e-mails carry one-time codes, which must not end up in logs.
+    'default' => env('MAIL_MAILER', 'smtp'),
 
     /*
     |--------------------------------------------------------------------------
