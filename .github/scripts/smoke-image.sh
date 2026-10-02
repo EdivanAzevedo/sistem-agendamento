@@ -29,6 +29,9 @@ api)
     echo "Laravel caches (config, routes, views, events) with read-only code"
     $docker run --rm "$image" php artisan optimize
 
+    echo "API documentation cache (public docs must never be generated per request)"
+    $docker run --rm "$image" php artisan scramble:cache
+
     echo "Drivers without any environment variables"
     drivers=$($docker run --rm "$image" php artisan about --only=drivers --json)
     echo "$drivers"

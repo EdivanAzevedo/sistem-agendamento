@@ -1,0 +1,120 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Sistema de Agendamento \u2014 API",
+        "version": "0.1.0",
+        "description": "API do Sistema de Agendamento.\n\n## Conven\u00e7\u00f5es\n\n- Todas as rotas ficam em `/api/v1` e trocam JSON.\n- Erros seguem a RFC 9457 (`application/problem+json`). Para identificar um erro, compare\n  apenas o \u00faltimo segmento do `type` (o slug); `title` e `detail` s\u00e3o textos para pessoas.\n- Toda resposta traz o header `X-Trace-Id`, repetido no campo `trace_id` dos erros.\n  Informe esse c\u00f3digo ao suporte ao relatar um problema.\n- A autentica\u00e7\u00e3o ser\u00e1 por sess\u00e3o em cookie (mesma origem), a partir da fase de identidade."
+    },
+    "servers": [
+        {
+            "url": "/api/v1"
+        }
+    ],
+    "components": {
+        "schemas": {
+            "ProblemDetails": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Identifica o tipo do problema: `about:blank` para falhas HTTP gen\u00e9ricas ou `{APP_URL}/problems/{slug}` para falhas da aplica\u00e7\u00e3o. Compare apenas o slug.",
+                        "examples": [
+                            "about:blank"
+                        ]
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Resumo do problema para exibir ao usu\u00e1rio. N\u00e3o use para decidir comportamento.",
+                        "examples": [
+                            "N\u00e3o encontrado"
+                        ]
+                    },
+                    "status": {
+                        "type": "integer",
+                        "description": "C\u00f3digo de status HTTP, igual ao da resposta.",
+                        "examples": [
+                            404
+                        ]
+                    },
+                    "detail": {
+                        "type": "string",
+                        "description": "Explica\u00e7\u00e3o desta ocorr\u00eancia para exibir ao usu\u00e1rio."
+                    },
+                    "trace_id": {
+                        "type": "string",
+                        "description": "C\u00f3digo de rastreio da requisi\u00e7\u00e3o (tamb\u00e9m no header `X-Trace-Id`). Informe-o ao suporte.",
+                        "pattern": "^[0-9a-f]{32}$",
+                        "examples": [
+                            "4bf92f3577b34da6a3ce929d0e0e4736"
+                        ]
+                    }
+                },
+                "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "trace_id"
+                ],
+                "title": "ProblemDetails"
+            },
+            "ValidationProblemDetails": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "Identifica o tipo do problema: `about:blank` para falhas HTTP gen\u00e9ricas ou `{APP_URL}/problems/{slug}` para falhas da aplica\u00e7\u00e3o. Compare apenas o slug.",
+                        "examples": [
+                            "about:blank"
+                        ]
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Resumo do problema para exibir ao usu\u00e1rio. N\u00e3o use para decidir comportamento.",
+                        "examples": [
+                            "Dados inv\u00e1lidos"
+                        ]
+                    },
+                    "status": {
+                        "type": "integer",
+                        "description": "C\u00f3digo de status HTTP, igual ao da resposta.",
+                        "examples": [
+                            422
+                        ]
+                    },
+                    "detail": {
+                        "type": "string",
+                        "description": "Explica\u00e7\u00e3o desta ocorr\u00eancia para exibir ao usu\u00e1rio."
+                    },
+                    "trace_id": {
+                        "type": "string",
+                        "description": "C\u00f3digo de rastreio da requisi\u00e7\u00e3o (tamb\u00e9m no header `X-Trace-Id`). Informe-o ao suporte.",
+                        "pattern": "^[0-9a-f]{32}$",
+                        "examples": [
+                            "4bf92f3577b34da6a3ce929d0e0e4736"
+                        ]
+                    },
+                    "errors": {
+                        "type": "object",
+                        "description": "Mensagens de valida\u00e7\u00e3o, agrupadas pelo nome do campo.",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "trace_id",
+                    "errors"
+                ],
+                "title": "ValidationProblemDetails"
+            }
+        }
+    }
+}

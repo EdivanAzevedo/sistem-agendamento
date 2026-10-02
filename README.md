@@ -38,12 +38,13 @@ docker compose exec api php artisan key:generate
 docker compose exec api php artisan migrate
 ```
 
-| Endereço                    | O que é                                          |
-| --------------------------- | ------------------------------------------------ |
-| http://localhost:8080       | Aplicação web (API em `/api/v1`)                 |
-| http://localhost:8080/up    | Verificação de vida (liveness)                   |
-| http://localhost:8080/ready | Verificação de prontidão (banco, Redis e fila)   |
-| http://localhost:8025       | Mailpit (e-mails capturados)                     |
+| Endereço                       | O que é                                         |
+| ------------------------------ | ----------------------------------------------- |
+| http://localhost:8080          | Aplicação web (API em `/api/v1`)                |
+| http://localhost:8080/up       | Verificação de vida (liveness)                  |
+| http://localhost:8080/ready    | Verificação de prontidão (banco, Redis e fila)  |
+| http://localhost:8080/docs/api | Documentação da API (OpenAPI, interface Scalar) |
+| http://localhost:8025          | Mailpit (e-mails capturados)                    |
 
 Em hosts Linux, exporte `UID` e `GID` antes do build para que os arquivos criados dentro do
 container pertençam ao seu usuário.
@@ -65,13 +66,26 @@ npm run test            # Vitest
 
 Para corrigir formatação e lint automaticamente no frontend: `npm run format` e `npm run lint`.
 
+## Contrato da API
+
+A documentação da API é gerada do código pelo Scramble e versionada junto com os tipos do frontend
+([ADR 0007](docs/adr/0007-contrato-tipado-via-openapi.md)). Depois de mudar a API, regenere os dois:
+
+```sh
+docker compose exec api composer api:docs   # atualiza api/openapi.json
+cd web && npm run api:types                  # atualiza web/src/api/schema.d.ts
+```
+
+O CI falha se algum dos dois estiver desatualizado.
+
 ## Integração contínua
 
 Todo push na `main` e todo pull request executam:
 
-1. **API** — Pint, Larastan (nível máximo), Pest contra MySQL e Redis com cobertura mínima de 90%
-   e `composer audit`.
-2. **Web** — Prettier, oxlint + ESLint, `vue-tsc`, Vitest, `npm audit` e build de produção.
+1. **API** — Pint, Larastan (nível máximo), Pest contra MySQL e Redis com cobertura mínima de 90%,
+   checagem de que `openapi.json` está atualizado e `composer audit`.
+2. **Web** — Prettier, oxlint + ESLint, checagem de que os tipos gerados da API estão atualizados,
+   `vue-tsc`, Vitest, `npm audit` e build de produção.
 3. **Imagens** — gera as imagens de produção `api` (PHP-FPM) e `edge` (Caddy + SPA) a partir de
    [`infra/docker/Dockerfile`](infra/docker/Dockerfile), executa testes de inicialização
    ([`smoke-image.sh`](.github/scripts/smoke-image.sh)) e faz a varredura com o Trivy.

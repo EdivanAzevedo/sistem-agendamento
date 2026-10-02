@@ -73,6 +73,11 @@ jobs:
       - name: Tests with coverage (minimum 90%)
         run: php artisan test --coverage --min=90
 
+      - name: API contract is up to date (run `composer api:docs` if this fails)
+        run: |
+          composer api:docs
+          git diff --exit-code -- openapi.json
+
       - name: Dependency audit
         run: composer audit
 
@@ -111,6 +116,11 @@ jobs:
 
       - name: Type check (vue-tsc)
         run: npm run type-check
+
+      - name: Generated API types are up to date (run `npm run api:types` if this fails)
+        run: |
+          npm run api:types
+          git diff --exit-code -- src/api/schema.d.ts
 
       - name: Unit tests (Vitest)
         run: npm run test

@@ -16,7 +16,8 @@ export default defineConfigWithVueTs(
     files: ['**/*.{vue,ts,mts,tsx}'],
   },
 
-  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
+  // `src/api/schema.d.ts` is generated from the OpenAPI contract (`npm run api:types`).
+  globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**', 'src/api/schema.d.ts']),
 
   ...pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,

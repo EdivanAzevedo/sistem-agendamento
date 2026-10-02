@@ -11,6 +11,9 @@ use RuntimeException;
  *
  * Each subclass declares its HTTP status and a stable `type` slug; title and detail come from
  * `lang/{locale}/problems.php` under `types.{slug}`. These are not reported as application errors.
+ *
+ * `status()`, `type()` and `title()` must not depend on constructor arguments: the API
+ * documentation reads them from an instance created without calling the constructor.
  */
 abstract class ProblemException extends RuntimeException
 {
