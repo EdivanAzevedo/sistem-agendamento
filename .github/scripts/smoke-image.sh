@@ -3,7 +3,8 @@
 # The image has no .env file, so these checks also prove the production fallbacks apply.
 #
 # Usage: smoke-image.sh <api|edge> <image-ref>
-# Set DOCKER=podman to run it locally with Podman.
+# Set DOCKER=podman to run it locally with Podman. To reproduce CI faithfully, build the image from
+# a clean checkout (e.g. `git worktree add`): untracked local files would otherwise enter the build.
 set -eu
 
 target=${1:?usage: smoke-image.sh <api|edge> <image-ref>}
