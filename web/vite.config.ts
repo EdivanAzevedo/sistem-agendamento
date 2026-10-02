@@ -19,5 +19,9 @@ export default defineConfig({
     hmr: {
       clientPort: 8080,
     },
+    // Containers on macOS do not receive file-change events from the host.
+    watch: {
+      usePolling: process.env.VITE_USE_POLLING === 'true',
+    },
   },
 })

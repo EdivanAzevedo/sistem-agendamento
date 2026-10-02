@@ -35,7 +35,8 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // Files are never served from the app container (uploads go to object storage).
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

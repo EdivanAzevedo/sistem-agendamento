@@ -11,3 +11,10 @@ arch('application code declares strict types')
     ->toUseStrictTypes();
 
 arch()->preset()->security();
+
+arch('raw query builder is reserved for analytical queries and infrastructure checks')
+    ->expect('Illuminate\Support\Facades\DB')
+    ->toOnlyBeUsedIn([
+        'App\Modules\Reporting',
+        'App\Http\Controllers\Health',
+    ]);

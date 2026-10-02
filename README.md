@@ -49,9 +49,9 @@ container belong to your user.
 
 ```sh
 # API
-docker compose exec api php artisan test       # Pest, against a real MySQL database
-docker compose exec api vendor/bin/pint --test
-docker compose exec api vendor/bin/phpstan analyse
+docker compose exec api composer test       # Pest, against a real MySQL database
+docker compose exec api composer lint       # Pint (check only)
+docker compose exec api composer analyse    # Larastan, max level
 
 # Web (from web/)
 npm run lint
