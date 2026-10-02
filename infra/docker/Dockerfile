@@ -72,7 +72,7 @@ USER www-data
 # ---------------------------------------------------------------------------
 # spa: compiled single-page application (build only).
 # ---------------------------------------------------------------------------
-FROM docker.io/library/node:24.21.0-alpine3.24 AS spa
+FROM docker.io/library/node:26.10.0-alpine3.24 AS spa
 
 WORKDIR /app
 COPY web/package.json web/package-lock.json ./
