@@ -1,9 +1,9 @@
-# Architecture Decision Records
+# Registros de decisões de arquitetura (ADRs)
 
-Each significant decision is recorded as a short, immutable document. A decision that changes is
-superseded by a new record, never edited away. Numbers are reserved for the decisions planned for
-the project foundation, so they are not necessarily written in numeric order.
+Cada decisão importante é registrada num documento curto e imutável. Uma decisão que muda é
+substituída por um novo registro, nunca apagada. Os números estão reservados para as decisões
+planejadas para a fundação do projeto, por isso não são necessariamente escritos em ordem numérica.
 
-| #    | Decision                                                            | Status   |
-| ---- | ------------------------------------------------------------------- | -------- |
-| 0006 | [Error responses follow RFC 9457](0006-error-responses-rfc-9457.md) | Accepted |
+| #    | Decisão                                                                   | Status |
+| ---- | ------------------------------------------------------------------------- | ------ |
+| 0006 | [Respostas de erro seguem a RFC 9457](0006-respostas-de-erro-rfc-9457.md) | Aceita |

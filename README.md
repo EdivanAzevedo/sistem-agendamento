@@ -2,77 +2,87 @@
 
 [![CI](https://github.com/EdivanAzevedo/sistem-agendamento/actions/workflows/ci.yml/badge.svg)](https://github.com/EdivanAzevedo/sistem-agendamento/actions/workflows/ci.yml)
 
-Multi-tenant scheduling SaaS for service businesses (salons, barbershops, clinics, studios).
-Each business manages its team, services and a public page where customers book appointments.
+SaaS de agendamento multi-tenant para negócios de serviço (salões, barbearias, clínicas, estúdios).
+Cada negócio gerencia sua equipe, seus serviços e uma página pública onde os clientes agendam
+horários.
 
-> Status: early development — project foundation.
+> Status: desenvolvimento inicial — fundação do projeto.
 
 ## Stack
 
-| Layer    | Technology                                                      |
-| -------- | --------------------------------------------------------------- |
-| API      | Laravel 13 (PHP 8.3, php-fpm), MySQL 8, Redis                    |
-| Web      | Vue 3 + TypeScript SPA, Vite, Pinia, Tailwind CSS, shadcn-vue    |
-| Edge     | Caddy (SPA and API served from the same origin)                 |
-| Tooling  | Pest, Larastan (max level), Pint, Vitest, ESLint, Prettier      |
+| Camada      | Tecnologia                                                       |
+| ----------- | ---------------------------------------------------------------- |
+| API         | Laravel 13 (PHP 8.3, php-fpm), MySQL 8, Redis                    |
+| Web         | SPA em Vue 3 + TypeScript, Vite, Pinia, Tailwind CSS, shadcn-vue |
+| Borda       | Caddy (SPA e API servidos na mesma origem)                       |
+| Ferramentas | Pest, Larastan (nível máximo), Pint, Vitest, ESLint, Prettier    |
 
-## Repository layout
+## Estrutura do repositório
 
 ```
-api/     Laravel application (modular monolith under app/Modules)
-web/     Vue single-page application
-infra/   Container images, Caddy and database bootstrap
-docs/    Architecture decision records
+api/     Aplicação Laravel (monólito modular em app/Modules)
+web/     SPA em Vue
+infra/   Imagens de container, Caddy e inicialização do banco
+docs/    Registros de decisões de arquitetura (ADRs)
 ```
 
-## Running locally
+## Como rodar localmente
 
-Requirements: Docker or Podman with Compose v2.
+Requisitos: Docker ou Podman com Compose v2.
 
 ```sh
 cp api/.env.example api/.env
-docker compose up -d --build        # or: podman compose up -d --build
+docker compose up -d --build        # ou: podman compose up -d --build
 docker compose exec api composer install
 docker compose exec api php artisan key:generate
 docker compose exec api php artisan migrate
 ```
 
-| URL                         | What                                      |
-| --------------------------- | ----------------------------------------- |
-| http://localhost:8080       | Web app (API under `/api/v1`)             |
-| http://localhost:8080/up    | Liveness check                            |
-| http://localhost:8080/ready | Readiness check (database, Redis, queue)  |
-| http://localhost:8025       | Mailpit (captured e-mails)                |
+| Endereço                    | O que é                                          |
+| --------------------------- | ------------------------------------------------ |
+| http://localhost:8080       | Aplicação web (API em `/api/v1`)                 |
+| http://localhost:8080/up    | Verificação de vida (liveness)                   |
+| http://localhost:8080/ready | Verificação de prontidão (banco, Redis e fila)   |
+| http://localhost:8025       | Mailpit (e-mails capturados)                     |
 
-On Linux hosts, export `UID` and `GID` before building so files created inside the
-container belong to your user.
+Em hosts Linux, exporte `UID` e `GID` antes do build para que os arquivos criados dentro do
+container pertençam ao seu usuário.
 
-## Quality checks
+## Verificações de qualidade
 
 ```sh
 # API
-docker compose exec api composer test       # Pest, against a real MySQL database
-docker compose exec api composer lint       # Pint (check only)
-docker compose exec api composer analyse    # Larastan, max level
+docker compose exec api composer test       # Pest, contra um MySQL de verdade
+docker compose exec api composer lint       # Pint (só verifica)
+docker compose exec api composer analyse    # Larastan, nível máximo
 
-# Web (from web/)
-npm run lint
-npm run type-check
-npm run test
+# Web (dentro de web/)
+npm run check:format    # Prettier (só verifica)
+npm run check:lint      # oxlint + ESLint (só verifica)
+npm run type-check      # vue-tsc
+npm run test            # Vitest
 ```
 
-## Continuous integration
+Para corrigir formatação e lint automaticamente no frontend: `npm run format` e `npm run lint`.
 
-Every push to `main` and every pull request runs:
+## Integração contínua
 
-1. **API** — Pint, Larastan (max level), Pest against MySQL and Redis with a 90% coverage minimum,
-   `composer audit`.
-2. **Web** — Prettier, oxlint + ESLint, `vue-tsc`, Vitest, `npm audit`, production build.
-3. **Images** — builds the `api` (PHP-FPM) and `edge` (Caddy + SPA) production images from
-   [`infra/docker/Dockerfile`](infra/docker/Dockerfile) and scans them with Trivy. Fixable HIGH or
-   CRITICAL vulnerabilities fail the build; time-boxed exceptions live in
-   [`.trivyignore.yaml`](.trivyignore.yaml), each with a reason and an expiry date. On `main`, the
-   images are published to GitHub Container Registry.
+Todo push na `main` e todo pull request executam:
 
-All third-party actions are pinned to commit SHAs, and Dependabot keeps actions, base images and
-dependencies up to date.
+1. **API** — Pint, Larastan (nível máximo), Pest contra MySQL e Redis com cobertura mínima de 90%
+   e `composer audit`.
+2. **Web** — Prettier, oxlint + ESLint, `vue-tsc`, Vitest, `npm audit` e build de produção.
+3. **Imagens** — gera as imagens de produção `api` (PHP-FPM) e `edge` (Caddy + SPA) a partir de
+   [`infra/docker/Dockerfile`](infra/docker/Dockerfile), executa testes de inicialização
+   ([`smoke-image.sh`](.github/scripts/smoke-image.sh)) e faz a varredura com o Trivy.
+   Vulnerabilidades HIGH ou CRITICAL com correção disponível reprovam o build; exceções com prazo
+   ficam em [`.trivyignore.yaml`](.trivyignore.yaml), cada uma com motivo e data de expiração.
+
+Na `main`, cada imagem é publicada uma única vez, identificada pelo digest. Só depois que esse
+mesmo digest passa nos testes de inicialização e na checagem de vulnerabilidades ele recebe as tags
+(`sha-<commit>` e `latest`) no GitHub Container Registry. Nada é reconstruído entre a verificação e
+a publicação.
+
+O CI testa nas mesmas versões que vão para produção: PHP, Node e Composer são lidos do Dockerfile,
+e MySQL e Redis sobem a partir do [`compose.yaml`](compose.yaml). Todas as actions de terceiros são
+fixadas por SHA de commit, e o Dependabot mantém actions, imagens base e dependências atualizadas.
