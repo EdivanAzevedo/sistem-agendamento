@@ -12,7 +12,7 @@ FROM docker.io/library/composer:2.10.3 AS composer
 # ---------------------------------------------------------------------------
 # base: PHP-FPM runtime with the extensions the application needs.
 # ---------------------------------------------------------------------------
-FROM docker.io/library/php:8.3.35-fpm-alpine3.24 AS base
+FROM docker.io/library/php:8.5.11-fpm-alpine3.24 AS base
 
 COPY --from=ghcr.io/mlocati/php-extension-installer:2.9 /usr/bin/install-php-extensions /usr/local/bin/
 
