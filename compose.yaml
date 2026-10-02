@@ -40,7 +40,7 @@ services:
       - web
 
   mysql:
-    image: docker.io/library/mysql:8.4.11
+    image: docker.io/library/mysql:26.7.0
     environment:
       MYSQL_DATABASE: app
       MYSQL_USER: app
