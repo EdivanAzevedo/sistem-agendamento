@@ -18,7 +18,7 @@ services:
         condition: service_healthy
 
   web:
-    image: docker.io/library/node:24.21.0-alpine3.24
+    image: docker.io/library/node:26.10.0-alpine3.24
     working_dir: /app
     command: sh -c "npm ci && npm run dev -- --host 0.0.0.0 --port 5173"
     environment:
