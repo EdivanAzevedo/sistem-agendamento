@@ -10,3 +10,4 @@ numérica; decisões novas recebem números a partir de 0014.
 | 0006 | [Respostas de erro seguem a RFC 9457](0006-respostas-de-erro-rfc-9457.md)                              | Aceita |
 | 0007 | [Contrato tipado entre frontend e backend via OpenAPI](0007-contrato-tipado-via-openapi.md)            | Aceita |
 | 0014 | [Observabilidade: traces com OpenTelemetry e logs estruturados](0014-observabilidade-traces-e-logs.md) | Aceita |
+| 0015 | [Headers de segurança e política de segurança de conteúdo (CSP)](0015-headers-de-seguranca-e-csp.md)   | Aceita |

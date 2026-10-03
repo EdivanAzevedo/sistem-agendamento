@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\ApiDocsContentSecurityPolicy;
 use App\Support\Problems\OpenApi\AuthenticationProblemResponse;
 use App\Support\Problems\OpenApi\AuthorizationProblemResponse;
 use App\Support\Problems\OpenApi\DomainProblemResponse;
@@ -110,6 +111,8 @@ return [
             'cdn' => 'https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.69.0/dist/browser/standalone.js',
             'integrity' => 'sha384-UL+pt9bcR3hCuzEybA1bAyu6yv9qkzJuYCP5N+HZPOo9ZkUXcMflxqBjC1vfDzfe',
             'theme' => 'laravel',
+            // Scalar's default fonts come from a third-party host, which the CSP does not allow.
+            'withDefaultFonts' => false,
             // No `proxyUrl`: the API shares the docs' origin, so "Try it" requests go straight to it
             // instead of through Scalar's third-party proxy.
             'darkMode' => false,
@@ -175,6 +178,7 @@ return [
     // `scramble:cache` runs, each request analyses the codebase to build the document.
     'middleware' => [
         'throttle:30,1',
+        ApiDocsContentSecurityPolicy::class,
     ],
 
     // RFC 9457 error responses instead of Laravel's default error shapes.

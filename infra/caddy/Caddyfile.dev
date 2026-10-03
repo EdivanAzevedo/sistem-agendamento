@@ -6,6 +6,20 @@
 :8080 {
 	encode zstd gzip
 
+	# Same security headers as production, except HSTS (plain HTTP here) and the CSP, which only
+	# applies to the production image: the Vite dev server needs inline styles and a websocket.
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		# Links may carry tokens (invitations, password resets): never send the URL to other origins.
+		Referrer-Policy "same-origin"
+		Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		-Server
+		-Via
+	}
+
 	# Traces start in the API: drop any client-sent trace context (clients must not choose trace ids).
 	request_header -traceparent
 	request_header -tracestate

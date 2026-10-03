@@ -6,6 +6,22 @@
 {$SITE_ADDRESS::8080} {
 	encode zstd gzip
 
+	# Security headers for every response. The CSP is a default: routes with special needs (the API
+	# docs) send their own, which is kept because of the `?` (set only when absent).
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		?Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		# Links may carry tokens (invitations, password resets): never send the URL to other origins.
+		Referrer-Policy "same-origin"
+		Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		-Server
+		-Via
+	}
+
 	# Traces start in the API: drop any client-sent trace context (clients must not choose trace ids).
 	request_header -traceparent
 	request_header -tracestate

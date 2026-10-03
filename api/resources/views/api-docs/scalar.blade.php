@@ -12,13 +12,15 @@
 <div id="app"></div>
 {{-- Computed here because @json splits its arguments on commas. --}}
 @php($scalarOptions = $config->renderer()->all(except: ['cdn', 'integrity', 'credentials', 'view']))
+@php($cspNonce = \Illuminate\Support\Facades\Vite::cspNonce())
 <script
     src="{{ $config->renderer()->get('cdn') }}"
     integrity="{{ $config->renderer()->get('integrity') }}"
     crossorigin="anonymous"
+    @if ($cspNonce) nonce="{{ $cspNonce }}" @endif
 ></script>
 
-<script>
+<script @if ($cspNonce) nonce="{{ $cspNonce }}" @endif>
     const CSRF_TOKEN_COOKIE_KEY = "XSRF-TOKEN";
     const CSRF_TOKEN_HEADER_KEY = "X-XSRF-TOKEN";
     const getCookieValue = (key) => {

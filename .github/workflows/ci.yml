@@ -125,11 +125,14 @@ jobs:
       - name: Unit tests (Vitest)
         run: npm run test
 
-      - name: Dependency audit
-        run: npm audit --audit-level=high
+      - name: Dependency audit (time-boxed exceptions in audit-exceptions.json)
+        run: npm run check:audit
 
       - name: Build
         run: npm run build-only
+
+      - name: The build references no external origins (the CSP only allows 'self')
+        run: npm run check:assets
 
   collector:
     name: collector
@@ -144,9 +147,63 @@ jobs:
       - name: Redaction rules keep personal data out of traces
         run: infra/otel/test-redaction.sh
 
+  e2e:
+    name: e2e
+    needs: [api, web]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Runtime versions (from the production Dockerfile)
+        id: versions
+        run: .github/scripts/runtime-versions.sh >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ steps.versions.outputs.node }}
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web
+        run: npm ci --ignore-scripts
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      # Same cache scopes as the image job, which then reuses these layers.
+      - name: Build the api image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infra/docker/Dockerfile
+          target: api
+          load: true
+          tags: e2e/api:local
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+      - name: Build the edge image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infra/docker/Dockerfile
+          target: edge
+          load: true
+          tags: e2e/edge:local
+          cache-from: type=gha,scope=edge
+          cache-to: type=gha,mode=max,scope=edge
+
+      - name: Browser tests against the production images (CSP, security headers)
+        run: .github/scripts/e2e.sh e2e/api:local e2e/edge:local
+
   images:
     name: image (${{ matrix.target }})
-    needs: [api, web]
+    # Images are only published after the browser tests pass against them.
+    needs: [api, web, e2e]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:

@@ -63,6 +63,15 @@ npm run check:format    # Prettier (só verifica)
 npm run check:lint      # oxlint + ESLint (só verifica)
 npm run type-check      # vue-tsc
 npm run test            # Vitest
+npm run check:audit     # npm audit com as exceções com prazo de audit-exceptions.json
+```
+
+Testes de navegador (Playwright), contra as imagens de produção, como no CI:
+
+```sh
+docker build -f infra/docker/Dockerfile --target api -t agendamento/api:local .
+docker build -f infra/docker/Dockerfile --target edge -t agendamento/edge:local .
+.github/scripts/e2e.sh agendamento/api:local agendamento/edge:local   # DOCKER=podman com Podman
 ```
 
 Para corrigir formatação e lint automaticamente no frontend: `npm run format` e `npm run lint`.
@@ -93,6 +102,13 @@ Decisões em [ADR 0014](docs/adr/0014-observabilidade-traces-e-logs.md).
   testadas por [`infra/otel/test-redaction.sh`](infra/otel/test-redaction.sh)); erros de banco são
   registrados sem os valores da consulta.
 
+## Segurança
+
+Em produção, o Caddy envia em toda resposta uma política de segurança de conteúdo (CSP) restritiva,
+HSTS e os demais headers de proteção; a documentação da API usa uma política própria com nonce
+([ADR 0015](docs/adr/0015-headers-de-seguranca-e-csp.md)). Os testes de navegador garantem que o
+SPA e a documentação funcionam sob essas políticas.
+
 ## Integração contínua
 
 Todo push na `main` e todo pull request executam:
@@ -100,15 +116,19 @@ Todo push na `main` e todo pull request executam:
 1. **API** — Pint, Larastan (nível máximo), Pest contra MySQL e Redis com cobertura mínima de 90%,
    checagem de que `openapi.json` está atualizado e `composer audit`.
 2. **Web** — Prettier, oxlint + ESLint, checagem de que os tipos gerados da API estão atualizados,
-   `vue-tsc`, Vitest, `npm audit` e build de produção.
+   `vue-tsc`, Vitest, `npm audit` (exceções com prazo em
+   [`web/audit-exceptions.json`](web/audit-exceptions.json)), build de produção e checagem de que o
+   build não referencia nenhuma origem externa.
 3. **Coletor** — teste das regras de redação do OpenTelemetry com o coletor real.
-4. **Imagens** — gera as imagens de produção `api` (PHP-FPM) e `edge` (Caddy + SPA) a partir de
+4. **E2E** — testes de navegador (Playwright) contra as imagens de produção: CSP, headers de
+   segurança e ausência de erros no console.
+5. **Imagens** — gera as imagens de produção `api` (PHP-FPM) e `edge` (Caddy + SPA) a partir de
    [`infra/docker/Dockerfile`](infra/docker/Dockerfile), executa testes de inicialização
    ([`smoke-image.sh`](.github/scripts/smoke-image.sh)) e faz a varredura com o Trivy.
    Vulnerabilidades HIGH ou CRITICAL com correção disponível reprovam o build; exceções com prazo
    ficam em [`.trivyignore.yaml`](.trivyignore.yaml), cada uma com motivo e data de expiração.
 
-Na `main`, cada imagem é publicada uma única vez, identificada pelo digest. Só depois que esse
+Na `main`, depois dos testes de navegador, cada imagem é publicada uma única vez, identificada pelo digest. Só depois que esse
 mesmo digest passa nos testes de inicialização e na checagem de vulnerabilidades ele recebe as tags
 (`sha-<commit>` e `latest`) no GitHub Container Registry. Nada é reconstruído entre a verificação e
 a publicação.

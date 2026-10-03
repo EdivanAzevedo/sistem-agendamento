@@ -1,0 +1,11 @@
+{
+  "$comment": "Time-boxed exceptions for the npm audit gate (scripts/audit.mjs). Every entry needs a reason and an expiry date; once expired it stops applying and the advisory fails the build again.",
+  "exceptions": [
+    {
+      "advisory": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "reason": "Only reached through @vue/eslint-config-typescript (fast-glob, micromatch): dev-only lint tooling with static glob patterns, never shipped to browsers. No patched braces release exists yet.",
+      "expires": "2026-11-02"
+    }
+  ]
+}
