@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Support\Logging\CorrelationProcessor;
+use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -112,8 +114,13 @@ return [
             'handler_with' => [
                 'stream' => 'php://stderr',
             ],
-            'formatter' => env('LOG_STDERR_FORMATTER'),
-            'processors' => [PsrLogMessageProcessor::class],
+            // Structured logs in every environment: one JSON object per line, with the stack trace
+            // of exceptions and the trace, span and request ids (see CorrelationProcessor).
+            'formatter' => JsonFormatter::class,
+            'formatter_with' => [
+                'includeStacktraces' => true,
+            ],
+            'processors' => [PsrLogMessageProcessor::class, CorrelationProcessor::class],
         ],
 
         'syslog' => [

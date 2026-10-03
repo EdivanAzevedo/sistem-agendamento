@@ -10,9 +10,18 @@ php=$(sed -nE 's|^FROM docker\.io/library/php:([0-9]+\.[0-9]+)\.[0-9]+-.*|\1|p' 
 node=$(sed -nE 's|^FROM docker\.io/library/node:([0-9]+\.[0-9]+\.[0-9]+)-.*|\1|p' "$dockerfile")
 composer=$(sed -nE 's|^FROM docker\.io/library/composer:([0-9]+\.[0-9]+\.[0-9]+) .*|\1|p' "$dockerfile")
 
-if [ -z "$php" ] || [ -z "$node" ] || [ -z "$composer" ]; then
-    echo "Could not read runtime versions from $dockerfile (php='$php' node='$node' composer='$composer')" >&2
+# PHP extensions of the production runtime (first `install-php-extensions` line, i.e. the base
+# stage), in setup-php's comma-separated format, with the same pinned versions.
+php_extensions=$(awk '
+    $1 == "RUN" && $2 == "install-php-extensions" {
+        for (i = 3; i <= NF && $i != "\\" && $i != "&&"; i++) printf "%s%s", (i > 3 ? ", " : ""), $i
+        exit
+    }' "$dockerfile")
+
+if [ -z "$php" ] || [ -z "$node" ] || [ -z "$composer" ] || [ -z "$php_extensions" ]; then
+    echo "Could not read runtime versions from $dockerfile" \
+        "(php='$php' node='$node' composer='$composer' php_extensions='$php_extensions')" >&2
     exit 1
 fi
 
-printf 'php=%s\nnode=%s\ncomposer=%s\n' "$php" "$node" "$composer"
+printf 'php=%s\nnode=%s\ncomposer=%s\nphp_extensions=%s\n' "$php" "$node" "$composer" "$php_extensions"

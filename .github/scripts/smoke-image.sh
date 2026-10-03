@@ -20,7 +20,7 @@ api)
     # shellcheck disable=SC2016 # PHP code: `$` must reach PHP unexpanded.
     $docker run --rm "$image" php -r '
         $missing = array_filter(
-            ["bcmath", "intl", "pcntl", "pdo_mysql", "redis", "zip", "Zend OPcache"],
+            ["bcmath", "intl", "pcntl", "pdo_mysql", "redis", "zip", "Zend OPcache", "opentelemetry", "protobuf"],
             fn (string $ext): bool => ! extension_loaded($ext),
         );
         if ($missing !== []) { fwrite(STDERR, "missing: ".implode(", ", $missing)."\n"); exit(1); }
@@ -31,6 +31,13 @@ api)
 
     echo "API documentation cache (public docs must never be generated per request)"
     $docker run --rm "$image" php artisan scramble:cache
+
+    echo "OpenTelemetry SDK boots with production settings (collector unreachable is not an error)"
+    $docker run --rm \
+        -e OTEL_PHP_AUTOLOAD_ENABLED=true -e OTEL_SERVICE_NAME=smoke-test -e OTEL_TRACES_EXPORTER=otlp \
+        -e OTEL_METRICS_EXPORTER=none -e OTEL_LOGS_EXPORTER=none -e OTEL_PROPAGATORS=tracecontext \
+        -e OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf -e OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318 \
+        "$image" php artisan about --only=environment >/dev/null
 
     echo "Drivers without any environment variables"
     drivers=$($docker run --rm "$image" php artisan about --only=drivers --json)

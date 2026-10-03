@@ -45,7 +45,7 @@ jobs:
       - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: ${{ steps.versions.outputs.php }}
-          extensions: bcmath, intl, pcntl, pdo_mysql, redis, zip
+          extensions: ${{ steps.versions.outputs.php_extensions }}
           coverage: pcov
           tools: composer:${{ steps.versions.outputs.composer }}
 
@@ -130,6 +130,19 @@ jobs:
 
       - name: Build
         run: npm run build-only
+
+  collector:
+    name: collector
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Redaction rules keep personal data out of traces
+        run: infra/otel/test-redaction.sh
 
   images:
     name: image (${{ matrix.target }})

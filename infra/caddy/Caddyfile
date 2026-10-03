@@ -6,6 +6,12 @@
 {$SITE_ADDRESS::8080} {
 	encode zstd gzip
 
+	# Traces start in the API: drop any client-sent trace context (clients must not choose trace ids).
+	request_header -traceparent
+	request_header -tracestate
+	# One id per request, assigned here; a client-sent value is overwritten.
+	request_header X-Request-Id {http.request.uuid}
+
 	# Readiness exposes dependency status: answer only internal callers (deploy, monitoring).
 	@external_ready {
 		path /ready

@@ -1,0 +1,17 @@
+# Used by test-redaction.sh: same redaction processor, output written to a file for inspection.
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+exporters:
+  file:
+    path: /out/spans.json
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [transform/redact]
+      exporters: [file]

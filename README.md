@@ -44,6 +44,7 @@ docker compose exec api php artisan migrate
 | http://localhost:8080/up       | Verificação de vida (liveness)                  |
 | http://localhost:8080/ready    | Verificação de prontidão (banco, Redis e fila)  |
 | http://localhost:8080/docs/api | Documentação da API (OpenAPI, interface Scalar) |
+| http://localhost:16686         | Jaeger (traces das requisições)                 |
 | http://localhost:8025          | Mailpit (e-mails capturados)                    |
 
 Em hosts Linux, exporte `UID` e `GID` antes do build para que os arquivos criados dentro do
@@ -78,6 +79,20 @@ cd web && npm run api:types                  # atualiza web/src/api/schema.d.ts
 
 O CI falha se algum dos dois estiver desatualizado.
 
+## Observabilidade
+
+Decisões em [ADR 0014](docs/adr/0014-observabilidade-traces-e-logs.md).
+
+- **Traces**: cada requisição vira um trace (HTTP, SQL, cache, filas, chamadas externas), enviado
+  ao coletor do OpenTelemetry e visível no Jaeger em http://localhost:16686. O header `X-Trace-Id`
+  da resposta (e o `trace_id` dos erros) é o id do trace.
+- **Logs**: uma linha JSON por evento em stderr, com `trace_id`, `span_id` e `request_id`. Para ler
+  no terminal: `docker compose logs api | jq`.
+- **Dados sensíveis**: o coletor remove query strings, chaves de Redis e de cache e detalhes de erros
+  de banco antes de enviar os traces (regras em [`infra/otel/processors.yaml`](infra/otel/processors.yaml),
+  testadas por [`infra/otel/test-redaction.sh`](infra/otel/test-redaction.sh)); erros de banco são
+  registrados sem os valores da consulta.
+
 ## Integração contínua
 
 Todo push na `main` e todo pull request executam:
@@ -86,7 +101,8 @@ Todo push na `main` e todo pull request executam:
    checagem de que `openapi.json` está atualizado e `composer audit`.
 2. **Web** — Prettier, oxlint + ESLint, checagem de que os tipos gerados da API estão atualizados,
    `vue-tsc`, Vitest, `npm audit` e build de produção.
-3. **Imagens** — gera as imagens de produção `api` (PHP-FPM) e `edge` (Caddy + SPA) a partir de
+3. **Coletor** — teste das regras de redação do OpenTelemetry com o coletor real.
+4. **Imagens** — gera as imagens de produção `api` (PHP-FPM) e `edge` (Caddy + SPA) a partir de
    [`infra/docker/Dockerfile`](infra/docker/Dockerfile), executa testes de inicialização
    ([`smoke-image.sh`](.github/scripts/smoke-image.sh)) e faz a varredura com o Trivy.
    Vulnerabilidades HIGH ou CRITICAL com correção disponível reprovam o build; exceções com prazo
@@ -97,6 +113,6 @@ mesmo digest passa nos testes de inicialização e na checagem de vulnerabilidad
 (`sha-<commit>` e `latest`) no GitHub Container Registry. Nada é reconstruído entre a verificação e
 a publicação.
 
-O CI testa nas mesmas versões que vão para produção: PHP, Node e Composer são lidos do Dockerfile,
+O CI testa nas mesmas versões que vão para produção: PHP (com as mesmas extensões), Node e Composer são lidos do Dockerfile,
 e MySQL e Redis sobem a partir do [`compose.yaml`](compose.yaml). Todas as actions de terceiros são
 fixadas por SHA de commit, e o Dependabot mantém actions, imagens base e dependências atualizadas.

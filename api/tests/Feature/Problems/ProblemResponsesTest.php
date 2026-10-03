@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Http\Middleware\AssignTraceId;
+use App\Http\Middleware\AssignCorrelationIds;
 use App\Support\Problems\ProblemDetails;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -44,7 +44,7 @@ it('renders a missing route as an about:blank problem', function () {
 
     expect($response->json('trace_id'))
         ->toMatch('/^[0-9a-f]{32}$/')
-        ->toBe($response->headers->get(AssignTraceId::HEADER));
+        ->toBe($response->headers->get(AssignCorrelationIds::TRACE_HEADER));
 });
 
 it('renders validation errors with field messages in Portuguese', function () {

@@ -1,0 +1,30 @@
+# Processors shared by every collector configuration (local development, tests and, later,
+# production), so the redaction rules that run are the ones CI verifies (see test-redaction.sh).
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 200
+    spike_limit_mib: 50
+
+  batch: {}
+
+  # Personal data and secrets never leave the collector. The Laravel instrumentation records them
+  # by default in the places below; each rule names what it protects.
+  # Statements are single-quoted: plain YAML would read "Connection: " as a key.
+  transform/redact:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          # Query strings can carry tokens (signed links, verification codes): keep only the path.
+          - 'delete_key(attributes, "url.query")'
+          - 'replace_pattern(attributes["url.full"], "\\?.*$", "")'
+          # Redis keys include session ids and rate-limit keys: keep only the command name.
+          - 'replace_pattern(attributes["db.query.text"], "^(\\S+)\\s.*$", "$$1") where attributes["db.system.name"] == "redis"'
+          # Defense in depth: Laravel database error messages embed the query values.
+          - 'replace_pattern(status.message, "\\(Connection: .*$", "(details redacted)")'
+      - context: spanevent
+        statements:
+          # Cache keys include session ids and rate-limit keys (e-mails, IPs).
+          - 'delete_key(attributes, "key") where IsMatch(name, "^cache (hit|miss|set|forget)$")'
+          - 'replace_pattern(attributes["exception.message"], "\\(Connection: .*$", "(details redacted)")'

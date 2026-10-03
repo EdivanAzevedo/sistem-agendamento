@@ -16,7 +16,9 @@ FROM docker.io/library/php:8.3.35-fpm-alpine3.24 AS base
 
 COPY --from=ghcr.io/mlocati/php-extension-installer:2.9 /usr/bin/install-php-extensions /usr/local/bin/
 
-RUN install-php-extensions bcmath intl opcache pcntl pdo_mysql redis zip \
+# OpenTelemetry (auto-instrumentation hooks) and protobuf (fast OTLP encoding) are pinned:
+# the installer would otherwise fetch whatever PECL release is newest at build time.
+RUN install-php-extensions bcmath intl opcache pcntl pdo_mysql redis zip opentelemetry-1.4.2 protobuf-5.36.2 \
     # FPM never runs as root, so the pool-level user/group directives do not apply.
     && sed -i '/^user = /d; /^group = /d' /usr/local/etc/php-fpm.d/www.conf
 
