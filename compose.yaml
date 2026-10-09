@@ -84,7 +84,7 @@ services:
   # Receives traces from the API, removes personal data (infra/otel/processors.yaml) and forwards
   # them to Jaeger.
   otel-collector:
-    image: docker.io/otel/opentelemetry-collector-contrib:0.161.0
+    image: docker.io/otel/opentelemetry-collector-contrib:0.162.0
     command: ["--config=/etc/otel/processors.yaml", "--config=/etc/otel/collector.dev.yaml"]
     volumes:
       - ./infra/otel:/etc/otel:ro
