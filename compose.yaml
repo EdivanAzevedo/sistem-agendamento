@@ -92,7 +92,7 @@ services:
       - jaeger
 
   jaeger:
-    image: docker.io/jaegertracing/jaeger:2.21.0
+    image: docker.io/jaegertracing/jaeger:2.22.0
     ports:
       - "127.0.0.1:16686:16686"
 
