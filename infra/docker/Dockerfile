@@ -86,7 +86,7 @@ RUN npm run build-only
 # ---------------------------------------------------------------------------
 # edge: Caddy with the SPA. Serves static files and forwards the API to `api`.
 # ---------------------------------------------------------------------------
-FROM docker.io/library/caddy:2.11.4-alpine AS edge
+FROM docker.io/library/caddy:2.11.6-alpine AS edge
 
 RUN addgroup -S caddy && adduser -S -G caddy caddy \
     && chown -R caddy:caddy /data /config
