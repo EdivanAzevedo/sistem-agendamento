@@ -97,7 +97,7 @@ services:
       - "127.0.0.1:16686:16686"
 
   mailpit:
-    image: docker.io/axllent/mailpit:v1.31
+    image: docker.io/axllent/mailpit:v1.32
     ports:
       - "127.0.0.1:8025:8025"
 
