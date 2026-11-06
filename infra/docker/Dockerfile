@@ -7,7 +7,7 @@
 
 # Base image versions are literal (not build args) so Dependabot can update them.
 
-FROM docker.io/library/composer:2.10.3 AS composer
+FROM docker.io/library/composer:2.11.0 AS composer
 
 # ---------------------------------------------------------------------------
 # base: PHP-FPM runtime with the extensions the application needs.
